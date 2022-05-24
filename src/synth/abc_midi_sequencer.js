@@ -28,6 +28,7 @@ var parseCommon = require("../parse/abc_common");
 		var drumBars = options.drumBars || 1;
 		var drumIntro = options.drumIntro || 0;
 		var drumOn = drumPattern !== "";
+		var gracenotesOff = options.gracenotesOff || false;
 		var style = []; // The note head style for each voice.
 		var rhythmHeadThisBar = false; // Rhythm notation was detected.
 		var crescendoSize = 50; // how much to increase or decrease volume when crescendo/diminuendo is encountered.
@@ -263,7 +264,7 @@ var parseCommon = require("../parse/abc_common");
 										if (elem.rest) noteElem.rest = elem.rest;
 										if (elem.decoration) noteElem.decoration = elem.decoration.slice(0);
 										if (elem.pitches) noteElem.pitches = parseCommon.cloneArray(elem.pitches);
-										if (elem.gracenotes) noteElem.gracenotes = parseCommon.cloneArray(elem.gracenotes);
+										if (!gracenotesOff && elem.gracenotes) noteElem.gracenotes = parseCommon.cloneArray(elem.gracenotes);
 										if (elem.chord) noteElem.chord = parseCommon.cloneArray(elem.chord);
 
 										voices[voiceNumber].push(noteElem);
