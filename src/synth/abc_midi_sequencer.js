@@ -142,6 +142,8 @@ var parseCommon = require("../parse/abc_common");
 		tempoChanges["0"] = { el_type: 'tempo', qpm: qpm, timing: 0 };
 		var currentVolume;
 		var startRepeatPlaceholder = []; // There is a place holder for each voice.
+		var segnoRepeatPlaceholder = [];
+		var fineRepeatPlaceholder = [];
 		var skipEndingPlaceholder = []; // This is the place where the first ending starts.
 		var startingDrumSet = false;
 		var lines = abctune.lines; //abctune.deline(); TODO-PER: can switch to this, then simplify the loops below.
@@ -266,6 +268,7 @@ var parseCommon = require("../parse/abc_common");
 										if (elem.pitches) noteElem.pitches = parseCommon.cloneArray(elem.pitches);
 										if (!gracenotesOff && elem.gracenotes) noteElem.gracenotes = parseCommon.cloneArray(elem.gracenotes);
 										if (elem.chord) noteElem.chord = parseCommon.cloneArray(elem.chord);
+										
 
 										voices[voiceNumber].push(noteElem);
 										if (elem.style === "rhythm") {
@@ -275,6 +278,7 @@ var parseCommon = require("../parse/abc_common");
 										noteEventsInBar++;
 										durationCounter[voiceNumber] += noteElem.duration;
 									}
+									
 									break;
 								case "key":
 								case "keySignature":
@@ -328,6 +332,7 @@ var parseCommon = require("../parse/abc_common");
 										skipEndingPlaceholder[voiceNumber] = voices[voiceNumber].length;
 									if (startRepeat)
 										startRepeatPlaceholder[voiceNumber] = voices[voiceNumber].length;
+									
 									rhythmHeadThisBar = false;
 									break;
 								case 'style':
@@ -399,6 +404,30 @@ var parseCommon = require("../parse/abc_common");
 									break;
 								default:
 									console.log("MIDI: element type " + elem.el_type + " not handled.");
+							}
+							/** D.S./D.C. */
+							if(elem.decoration) {
+								if(elem.decoration.indexOf('segno') >= 0) {
+									segnoRepeatPlaceholder[voiceNumber] = voices[voiceNumber].length;
+									if(elem.el_type === 'note') {
+										segnoRepeatPlaceholder[voiceNumber]--;
+									}
+								}	
+								if(elem.decoration.indexOf('fine') >= 0) {
+									fineRepeatPlaceholder[voiceNumber] = voices[voiceNumber].length;
+								}
+								if((elem.decoration.indexOf('D.C.') >= 0|| elem.decoration.indexOf('D.S.') >= 0)) {
+									var s = segnoRepeatPlaceholder[voiceNumber] || 0;
+									var e = fineRepeatPlaceholder[voiceNumber];
+									for (var z = s; z < e; z++) {
+										var item = parseCommon.clone(voices[voiceNumber][z]);
+										if (item.pitches)
+											item.pitches = parseCommon.cloneArray(item.pitches);
+										voices[voiceNumber].push(item);
+									}
+									segnoRepeatPlaceholder[voiceNumber] = undefined;
+									fineRepeatPlaceholder[voiceNumber] = undefined;
+								}
 							}
 						}
 						voiceNumber++;

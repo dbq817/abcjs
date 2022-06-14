@@ -438,6 +438,8 @@ var Tune = function() {
 			var voiceTimeMilliseconds = Math.round(voiceTime * 1000);
 			var startingRepeatElem = 0;
 			var endingRepeatElem = -1;
+			var segnoRepeatElem = 0;
+			var fineRepeatElem = -1;
 			var elements = voices[v];
 			var bpm = startingBpm;
 			timeDivider = this.getBeatLength() * bpm / 60;
@@ -497,6 +499,38 @@ var Tune = function() {
 						endingRepeatElem = elem;
 					if (startRepeat)
 						startingRepeatElem = elem;
+				}
+				/** D.S./D.C. */
+				var abcelem = element.abcelem;
+				if(abcelem.decoration) {
+					if(abcelem.decoration.indexOf('segno') >= 0) {
+						segnoRepeatElem = elem; 
+						if(abcelem.el_type === 'note') {
+							segnoRepeatElem--;
+						}
+					}	
+					if(abcelem.decoration.indexOf('fine') >= 0) {
+						fineRepeatElem = elem;
+					}
+					if((abcelem.decoration.indexOf('D.C.') >= 0|| abcelem.decoration.indexOf('D.S.') >= 0)) {
+						for (var el2 = segnoRepeatElem; el2 < fineRepeatElem; el2++) {
+							thisMeasure = elements[el2].measureNumber;
+							if (tempoDone !== thisMeasure && this.tempoLocations[thisMeasure]) {
+								bpm = this.tempoLocations[thisMeasure];
+								timeDivider = warp * this.getBeatLength() * bpm / 60;
+								tempoDone = thisMeasure;
+							}
+							var element2 = elements[el2].elem;
+							ret = this.addElementToEvents(eventHash, element2, voiceTimeMilliseconds, elements[el2].top, elements[el2].height, elements[el2].line, elements[el2].measureNumber, timeDivider, isTiedState, nextIsBar);
+							isTiedState = ret.isTiedState;
+							nextIsBar = ret.nextIsBar;
+							voiceTime += ret.duration;
+							lastVoiceTimeMilliseconds = voiceTimeMilliseconds;
+							voiceTimeMilliseconds = Math.round(voiceTime * 1000);
+						}
+						segnoRepeatElem = 0; 
+						fineRepeatElem = -1;
+					}
 				}
 			}
 			maxVoiceTimeMilliseconds = Math.max(maxVoiceTimeMilliseconds, voiceTimeMilliseconds)
