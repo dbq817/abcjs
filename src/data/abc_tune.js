@@ -589,7 +589,7 @@ var Tune = function() {
 			bpm = bpm * statedBeatLength / beatLength;
 		}
 		if (!bpm) {
-			bpm = 180;
+			bpm = 80;
 			// Compensate for compound meter, where the beat isn't a beat.
 			var meter = this.getMeterFraction();
 			if (meter && meter.num !== 3 && (meter.num % 3 === 0)) {
