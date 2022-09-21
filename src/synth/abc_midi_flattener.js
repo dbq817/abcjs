@@ -633,8 +633,15 @@ var pitchesToPerc = require('./pitches-to-perc');
 				var p = { cmd: 'note', pitch: actualPitch, volume: velocity, start: timeToRealTime(elem.time), duration: durationRounded(note.duration), instrument: currentInstrument };
 				p = adjustForMicroTone(p);
 				if (elem.gracenotes) {
-					p.duration = p.duration / 2;
-					p.start = p.start + p.duration;
+					var graceDuration = 0;
+					for(var i = 0; i < elem.gracenotes.length; i++) {
+						graceDuration += elem.gracenotes[i].duration;
+					}
+					if(graceDuration >= p.duration) {
+						graceDuration = p.duration / 2;
+					}
+					p.duration = p.duration - graceDuration;
+					p.start = p.start + graceDuration;
 				}
 				if (elem.elem)
 					elem.elem.midiPitches.push(p);
@@ -745,7 +752,7 @@ var pitchesToPerc = require('./pitches-to-perc');
 		}
 		var multiplier = companionDuration/2 / graceDuration;
 
-		for (g = 0; g < graces.length; g++) {
+		for (var g = 0; g < graces.length; g++) {
 			grace = graces[g];
 			var actualPitch = adjustPitch(grace);
 			if (currentInstrument === drumInstrument && percmap) {
