@@ -10,8 +10,10 @@ function registerAudioContext(ac) {
 		// no audio context passed in, so create it unless there is already one from before.
 		if (!window.abcjsAudioContext) {
 			var AudioContext = window.AudioContext || window.webkitAudioContext;
-			if (AudioContext)
+			if (AudioContext){
 				window.abcjsAudioContext = new AudioContext();
+				unlockAudioContext(window.abcjsAudioContext);
+			}
 			else
 				return false;
 		}
@@ -19,4 +21,13 @@ function registerAudioContext(ac) {
 	return window.abcjsAudioContext.state !== "suspended";
 }
 
+function unlockAudioContext(audioCtx) {
+	if (audioCtx.state !== 'suspended') return;
+	const b = document.body;
+	const events = ['touchstart','touchend', 'mousedown','keydown'];
+	events.forEach(e => b.addEventListener(e, unlock, false));
+	function unlock() { audioCtx.resume().then(clean); }
+	function clean() { events.forEach(e => b.removeEventListener(e, unlock)); }
+ }
+ 
 module.exports = registerAudioContext;
