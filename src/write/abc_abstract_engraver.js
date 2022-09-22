@@ -387,6 +387,10 @@ AbstractEngraver.prototype.createABCElement = function(isFirstStaff, isSingleLin
 	AbstractEngraver.prototype.createBeam = function (isSingleLineStaff, voice, elems) {
 		var abselemset = [];
 
+		const total = elems.reduce((prev, ele)=>prev+ele.averagepitch, 0);
+		const avg = total / elems.length;
+		this.stemdir = avg < 6 ? "up" : "down";
+
 		var beamelem = new BeamElem(this.stemHeight * this.voiceScale, this.stemdir, this.flatBeams, elems[0]);
 		if (hint) beamelem.setHint();
 		for (var i = 0; i < elems.length; i++) {
